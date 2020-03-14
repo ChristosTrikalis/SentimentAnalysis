@@ -2,45 +2,48 @@ import pandas as pd
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import json
+# import tensorflow
 
-def get_data():
-    with open("C:\\Users\\Trika\\Desktop\\ScrapyProjectExample\\tutorial\\example.json") as json_file:
-        data = json.load(json_file)
-    dict_to_dataframe(data)
+class Preprocessing:
+    def get_data(self, path):
+        with open(path) as json_file:
+            data = json.load(json_file)
+        self.dict_to_dataframe(data)
 
-def dict_to_dataframe(data):
-    titles_and_links = pd.DataFrame()
-    titles = []
-    links = []
-    length = (len(data)/2).__int__()
+    def dict_to_dataframe(self, data):
+        titles_and_links = pd.DataFrame()
+        titles = []
+        links = []
+        dates = []
+        length = len(data)
+        print(length)
+        for p in range(length - 1):
+            values = list(data[p].values())
+            titles.append(values[0])
+            dates.append(values[1])
+            links.append(values[2])
 
-    for i in range(0,length):
-        dictTemp1 = data[i]
-        dictTemp2 = data[i+length]
-        for k,v in dictTemp1.items():
-            titles.append(v)
-        for k,v in dictTemp2.items():
-            links.append(v)
+        titles_and_links['titles'] = titles  # fills first column with titles
+        titles_and_links['links'] = links  # fills second column with links
+        titles_and_links['datetime'] = dates
+        self.debug(titles_and_links)
 
-    titles_and_links['titles'] = titles                                        #fills first column with titles
-    titles_and_links['links'] = links                                          #fills second column with links
+    @staticmethod
+    def debug(data):
+        with pd.option_context('display.max_rows', 25, 'display.max_columns', 63):
+            print(data.head())
 
-    print(titles_and_links.iloc[1,0])                                                    #debugging before text normalization
-    titles_and_links['titles'] = stopwords_removal_and_canonicalization(titles_and_links['titles'])
-    print("Canonicalization and stop words removal: \n")
-    print(titles_and_links.iloc[1,0])                                                    #debugging after text normalization
-
-def stopwords_removal_and_canonicalization(data):
-    stop_words = set(stopwords.words('english'))
-    sentences = []
-    import string
-    for i in data:
-        result = i.translate(str.maketrans('', '', string.punctuation))
-        word_tokens=word_tokenize(result)
-        filtered_sentence = []
-        for w in word_tokens:
-            if w not in stop_words:
-                filtered_sentence.append(w)
-        sentences.append(filtered_sentence)
-    return sentences
-get_data()
+    @staticmethod
+    def stopwords_removal_and_canonicalization(data):
+        stop_words = set(stopwords.words('english'))
+        sentences = []
+        import string
+        for i in data:
+            result = i.translate(str.maketrans('', '', string.punctuation))
+            word_tokens = word_tokenize(result)
+            filtered_sentence = []
+            for w in word_tokens:
+                if w not in stop_words:
+                    filtered_sentence.append(w)
+            sentences.append(filtered_sentence)
+        return sentences
